@@ -27,7 +27,7 @@ from tqdm import tqdm
 @click.option('--min_conf', default=0, help='Filter the lines to output by a min confidence level')
 @click.option('--max_conf', default=100, help='Filter the lines to output by a max confidence level')
 @click.option('--mod_line', default=0, help='Filter the lines to output if the modulus of the linenumber is 0')
-@click.option('--max_line', default=0, help='Maximal ground truth lines to produce')
+@click.option('-n','--num', default=0, help='Maximal ground truth lines to produce')
 @click.option('-g', '--gitrepo', default=False, is_flag=True, help='Create a git repository and add all images. Further processing can be done with GTCheck.')
 @click.option('-t', '--empty_textfiles', default=False, is_flag=True, help='Add empty textfiles to gitrepo and then replace')
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Print more process information')
@@ -36,7 +36,7 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                        level, padval, padprc,
                        regex, min_len, max_len,
                        min_conf, max_conf,
-                       max_line, mod_line,
+                       num, mod_line,
                        gitrepo, empty_textfiles, verbose):
     """
     Cuts areas (char, word, line) which contains user-specific expression
@@ -53,7 +53,7 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
     try:
         with PyTessBaseAPI(lang=lang,psm=psm) as api:
             for fname in tqdm(fnames):
-                if max_line == line_count: break
+                if num == line_count: break
                 # Set necessary information
                 api.SetImageFile(str(fname.resolve()))
                 # Set Variable
@@ -105,8 +105,8 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                                           +"\t"+origsymbol
                                           +"\t"+'{:.3f}'.format(conf)
                                           +"\t"+str(bbox)+"\n")
+                        if num == line_count: break
                         line_count += 1
-                        if max_line == line_count: break
         if gitrepo:
             from create_gitrepo import create_gitrepo
             for gtdir in gtdirs:

@@ -29,7 +29,11 @@ work for other similar environments.
 
 ### Start the process
 
-    $ python3 gtmake.py [Path-to-images] [--arguments] 
+    $ python3 gtmake.py [Path-to-images] [--arguments]
+
+### For example creating gtline pairs with a git repository with max 10 lines
+
+    $ python3 gtmake.py ./test -g -n 10
 
 ### To see all options 
 
