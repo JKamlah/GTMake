@@ -21,7 +21,7 @@ from tqdm import tqdm
 @click.option('--level', default="line", help='Level of cut (line, word, char)', type=click.Choice(['line','word','char']))
 @click.option('--padval', default=0, help='Add more pixel to the cut by a fix value')
 @click.option('--padprc', default=0.0, help='Add more pixel to the cut by percantage')
-@click.option('--regex', default=".*", help='Filter the lines to output by a regular expression')
+@click.option('-r', '--regex', default=".*", help='Filter the lines to output by a regular expression')
 @click.option('--min_len', default=1, help='Filter the lines to output by min amount of characters')
 @click.option('--max_len', default=0, help='Filter the lines to output by max amount of characters')
 @click.option('--min_conf', default=0, help='Filter the lines to output by a min confidence level')
