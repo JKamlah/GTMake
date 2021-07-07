@@ -31,7 +31,7 @@ def create_gitrepo(repopath, text_extension, empty_textfiles, readme_text, verbo
                 repo.index.add([new_file])
                 repo.index.commit(f"ADD {Path(new_file).name}")
             move(str(fname.absolute()), new_file)
-            if '.{text_extension}' not in new_file:
+            if f'.{text_extension}' not in new_file:
                 repo.index.add([new_file])
                 repo.index.commit(f"ADD {Path(new_file).name}")
     if not gt.joinpath('README.md').exists():
