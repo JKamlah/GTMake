@@ -4,12 +4,15 @@
 ########## IMPORT ##########
 from tesserocr import PyTessBaseAPI, RIL, iterate_level
 from PIL import Image
+from datetime import datetime
 import re
 import json
 from pathlib import Path
 import imghdr
 import click
 from tqdm import tqdm
+from collections import defaultdict
+from textwrap import wrap
 
 ########## CUTTER FUNCTION ##########
 @click.command()
@@ -22,14 +25,14 @@ from tqdm import tqdm
 @click.option('--padval', default=0, help='Add more pixel to the cut by a fix value')
 @click.option('--padprc', default=0.0, help='Add more pixel to the cut by percantage')
 @click.option('-r', '--regex', default=".*", help='Filter the lines to output by a regular expression')
-@click.option('--min_len', default=1, help='Filter the lines to output by min amount of characters')
-@click.option('--max_len', default=0, help='Filter the lines to output by max amount of characters')
-@click.option('--min_conf', default=0, help='Filter the lines to output by a min confidence level')
-@click.option('--max_conf', default=100, help='Filter the lines to output by a max confidence level')
-@click.option('--mod_line', default=0, help='Filter the lines to output if the modulus of the linenumber is 0')
+@click.option('--min-len', default=1, help='Filter the lines to output by min amount of characters')
+@click.option('--max-len', default=0, help='Filter the lines to output by max amount of characters')
+@click.option('--min-conf', default=0, help='Filter the lines to output by a min confidence level')
+@click.option('--max-conf', default=100, help='Filter the lines to output by a max confidence level')
+@click.option('--mod-line', default=0, help='Filter the lines to output if the modulus of the linenumber is 0')
 @click.option('-n','--num', default=0, help='Maximal ground truth lines to produce')
 @click.option('-g', '--gitrepo', default=False, is_flag=True, help='Create a git repository and add all images. Further processing can be done with GTCheck.')
-@click.option('-t', '--empty_textfiles', default=False, is_flag=True, help='Add empty textfiles to gitrepo and then replace')
+@click.option('-t', '--empty-textfiles', default=False, is_flag=True, help='Add empty textfiles to gitrepo and then replace')
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Print more process information')
 @click.pass_context
 def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
@@ -49,10 +52,13 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
     if verbose:
         print(f"Start processing {len(fnames)} files: {fnames}")
     line_count = 1
-    gtdirs = []
+    gtdirs = defaultdict(list)
     try:
         with PyTessBaseAPI(lang=lang,psm=psm) as api:
             for fname in tqdm(fnames):
+                gtdir = Path(outputfolder) if outputfolder and Path(
+                    outputfolder).parent.exists() else fname.parent.joinpath("gt/")
+                gtdirs[str(gtdir.resolve())].append(fname)
                 if num == line_count: break
                 # Set necessary information
                 api.SetImageFile(str(fname.resolve()))
@@ -72,6 +78,8 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                     if not (min_conf < conf < max_conf): continue
                     expr_result = re.search(fr"{regex}", symbol)
                     if expr_result:
+                        if not gtdir.exists():
+                            gtdir.mkdir()
                         origsymbol = symbol[:]
                         count += 1
                         if mod_line and count%mod_line == 0 : continue
@@ -81,11 +89,6 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                         elif padprc != 0.0:
                             bbox = (bbox[0] + padprc, bbox[1] + padprc, bbox[2] + padprc, bbox[3] + padprc)
                         cutarea = img.crop(bbox)
-                        gtdir = Path(outputfolder) if outputfolder and Path(outputfolder).parent.exists() else fname.parent.joinpath("gt/")
-                        if str(gtdir.resolve()) not in gtdirs:
-                            gtdirs.append(str(gtdir.resolve()))
-                        if not gtdir.exists():
-                            gtdir.mkdir()
                         new_fname = fname.name.split(".",1)[0]+'_{:04d}'.format(count)
                         cutarea.save(gtdir.joinpath(new_fname+".png"))
                         origsymbol = "???" if origsymbol == "" else origsymbol
@@ -101,16 +104,33 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                             print(f"Content: {origsymbol}")
                         with open(gtdir.joinpath("cutinfo.txt"),"a") as cutinfo:
                             # Information (Number of cut, Line/Word/Char Text, Confidence, BBOX)
-                            cutinfo.write('{:06d}'.format(count)
-                                          +"\t"+origsymbol
-                                          +"\t"+'{:.3f}'.format(conf)
-                                          +"\t"+str(bbox)+"\n")
+                            cutinfo.write(f"[{datetime.now().strftime('%d-%b-%Y (%H:%M)')}]\t{count:06d}\t{origsymbol}\t{conf:.3f}\t{bbox}\n")
                         if num == line_count: break
                         line_count += 1
         if gitrepo:
             from create_gitrepo import create_gitrepo
-            for gtdir in gtdirs:
-                ctx.invoke(create_gitrepo, repopath=gtdir, empty_textfiles=empty_textfiles,verbose=verbose)
+            for gtdir, filelist in gtdirs.items():
+                fnames = '\n'.join(wrap('; '.join([fname.parent.name+'/'+fname.name for fname in filelist]), width=80))
+                readme_text = f"This repository contains gt files which were automatically generated with GTMake (https://github.com/UB-Mannheim/GTMake).\n\n" \
+                              f"Settings\n" \
+                              f"--------" \
+                              f"ext -> {ext} \n" \
+                              f"psm -> {psm} \n" \
+                              f"lang -> {lang} \n" \
+                              f"level -> {level} \n" \
+                              f"padval -> {padval} \n" \
+                              f"padprc -> {padprc} \n" \
+                              f"regex -> {regex} \n" \
+                              f"min-len -> {min_len} \n" \
+                              f"max-len -> {max_len} \n" \
+                              f"min-conf -> {min_conf} \n" \
+                              f"max-conf -> {max_conf} \n" \
+                              f"mod-line -> {mod_line} \n" \
+                              f"num -> {num} \n\n" \
+                              f"Processed files\n" \
+                              f"---------------" \
+                              f"{fnames}"
+                ctx.invoke(create_gitrepo, repopath=gtdir, empty_textfiles=empty_textfiles, readme_text=readme_text, verbose=verbose)
     except Exception as e:
         print("Some nasty things while cutting happens. Error:\n", e)
     return 0

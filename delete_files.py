@@ -5,7 +5,7 @@ import click
 import tqdm
 
 @click.command()
-@click.argument('list_of_files', nargs=1, type=click.Path(exists=True))
+@click.argument('list-of-files', nargs=1, type=click.Path(exists=True))
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Print more process information')
 def delete_files_with_list(list_of_files, verbose):
     with open(list_of_files, "r") as fin:

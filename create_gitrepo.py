@@ -5,9 +5,10 @@ import click
 
 @click.command()
 @click.argument('repopath', nargs=1, type=click.Path(exists=True))
-@click.option('-t', '--empty_textfiles', default=False, is_flag=True, help='Add empty textfiles to gitrepo and then replace')
+@click.option('-t', '--empty-textfiles', default=False, is_flag=True, help='Add empty textfiles to gitrepo and then replace')
+@click.option('-r', '--readme-text', default='')
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Print more process information')
-def create_gitrepo(repopath, empty_textfiles, verbose):
+def create_gitrepo(repopath, empty_textfiles, readme_text, verbose):
     print(f"Create gitrepo for {repopath}")
     gt = Path(repopath)
     repo = Repo.init(gt)
@@ -31,6 +32,7 @@ def create_gitrepo(repopath, empty_textfiles, verbose):
                 repo.index.add([new_file])
                 repo.index.commit(f"ADD {Path(new_file).name}")
     if not gt.joinpath('README.md').exists():
-        gt.joinpath('README.md').touch()
+        with open(gt.joinpath('README.md'), 'w') as fout:
+            fout.write(readme_text)
         repo.index.add([str(gt.joinpath('README.md').resolve())])
         repo.index.commit(f"ADD README")
