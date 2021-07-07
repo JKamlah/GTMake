@@ -18,7 +18,12 @@ def create_gitrepo(repopath, text_extension, empty_textfiles, readme_text, verbo
     gtlines_path = gt.joinpath('gtlines')
     if not gtlines_path.exists():
         gtlines_path.mkdir(exist_ok=True, parents=True)
+    with open(gt.joinpath('README.md'), 'w') as fout:
+        fout.write(readme_text)
+    repo.index.add([str(gt.joinpath('README.md').resolve())])
+    repo.index.commit(f"ADD README")
     for fname in gt.glob('*'):
+        if fname.name.endswith('.md'): continue
         if 'cutinfo.txt' in fname.name:
             repo.index.add([str(fname.resolve())])
             repo.index.commit(f"ADD cutinfo.txt")
