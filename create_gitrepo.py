@@ -14,10 +14,6 @@ def create_gitrepo(repopath, empty_textfiles, verbose):
     gtlines_path = gt.joinpath('gtlines')
     if not gtlines_path.exists():
         gtlines_path.mkdir(exist_ok=True, parents=True)
-    if not gt.joinpath('README.md').exists():
-        gt.joinpath('README.md').touch()
-        repo.index.add([str(gt.joinpath('README.md').resolve())])
-        repo.index.commit(f"ADD README")
     for fname in gt.glob('*'):
         if 'cutinfo.txt' in fname.name:
             repo.index.add([str(fname.resolve())])
@@ -34,3 +30,7 @@ def create_gitrepo(repopath, empty_textfiles, verbose):
             if '.gt.txt' not in new_file:
                 repo.index.add([new_file])
                 repo.index.commit(f"ADD {Path(new_file).name}")
+    if not gt.joinpath('README.md').exists():
+        gt.joinpath('README.md').touch()
+        repo.index.add([str(gt.joinpath('README.md').resolve())])
+        repo.index.commit(f"ADD README")
