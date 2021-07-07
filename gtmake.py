@@ -3,7 +3,7 @@
 
 ########## IMPORT ##########
 from tesserocr import PyTessBaseAPI, RIL, iterate_level
-from PIL import Image
+from PIL import Image, ImageOps, ImageMath
 from datetime import datetime
 import re
 import json
@@ -18,7 +18,8 @@ from textwrap import wrap
 @click.command()
 @click.argument('fpaths', nargs=-1, type=click.Path(exists=True))
 @click.option('-o', '--outputfolder', type=click.Path(), help='Per default the output is stored into a gt folder in the image folder')
-@click.option('--ext', default="jpg", help='Image extension')
+@click.option('-e', '--image-extension', 'ext', default='jpg', help='Image extension (Input)')
+@click.option('--autocontrast', default=False, is_flag=True, help='Apply autocontrast to lineimages (Output)')
 @click.option('--psm', default=3, help='Pagesegmentationmode (please see tesseract --help-extra)')
 @click.option('-l', '--lang', default="eng", help='Tesseract language model')
 @click.option('--level', default="line", help='Level of cut (line, word, char)', type=click.Choice(['line','word','char']))
@@ -36,7 +37,7 @@ from textwrap import wrap
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Print more process information')
 @click.pass_context
 def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
-                       level, padval, padprc,
+                       autocontrast, normalize, level, padval, padprc,
                        regex, min_len, max_len,
                        min_conf, max_conf,
                        num, mod_line,
@@ -89,8 +90,10 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                         elif padprc != 0.0:
                             bbox = (bbox[0] + padprc, bbox[1] + padprc, bbox[2] + padprc, bbox[3] + padprc)
                         cutarea = img.crop(bbox)
-                        new_fname = fname.name.split(".",1)[0]+'_{:04d}'.format(count)
-                        cutarea.save(gtdir.joinpath(new_fname+".png"))
+                        new_fname = fname.name.split(".", 1)[0] + '_{:04d}'.format(count)
+                        if autocontrast:
+                            cutarea = ImageOps.autocontrast(cutarea)
+                        cutarea.save(gtdir.joinpath(new_fname+f".{ext}"))
                         origsymbol = "???" if origsymbol == "" else origsymbol
                         with open(gtdir.joinpath(new_fname+".json"), "w") as cutinfo:
                             # Information (Number of cut, Line/Word/Char Text, Confidence, BBOX)
@@ -114,7 +117,8 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                 readme_text = f"This repository contains gt files which were automatically generated with GTMake (https://github.com/UB-Mannheim/GTMake).\n\n" \
                               f"Settings\n" \
                               f"--------" \
-                              f"ext -> {ext} \n" \
+                              f"image-extension -> {ext} \n" \
+                              f"autocontraxt -> {autocontrast} \n" \
                               f"psm -> {psm} \n" \
                               f"lang -> {lang} \n" \
                               f"level -> {level} \n" \

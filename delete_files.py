@@ -19,10 +19,12 @@ def delete_files_with_list(list_of_files, verbose):
                 os.remove(delfname)
 
 @click.command()
+@click.option('-e', '--image-extension', default='png')
+@click.option('--text-extension', default='gt.txt')
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Print more process information')
-def delete_files_without_textfiles(verbose):
-    images = set([img.split(".")[0] for img in glob.glob(f"*.png")])
-    txt = set([txt.split(".")[0] for txt in glob.glob(f"*.gt.txt")])
+def delete_files_without_textfiles(image_extension, text_extentsion, verbose):
+    images = set([img.split(".")[0] for img in glob.glob(f"*.{image_extension}")])
+    txt = set([txt.split(".")[0] for txt in glob.glob(f"*.{text_extentsion}")])
     for delname in tqdm(txt.difference(images)):
         fname = Path(delname)
         if verbose:
@@ -34,12 +36,14 @@ def delete_files_without_textfiles(verbose):
 
 @click.command()
 @click.argument('gtpath', nargs=1, type=click.Path(exists=True))
+@click.option('-e', '--image-extension', default='png')
+@click.option('--text-extension', default='gt.txt')
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Print more process information')
-def delete_gitrepo_files_without_textfiles(gtpath, verbose):
+def delete_gitrepo_files_without_textfiles(gtpath, image_extension, text_extentsion, verbose):
     from git import Repo
     repo = Repo(gtpath, search_parent_directories=True)
-    images = set([img.split(".")[0] for img in glob.glob(f"*.png")])
-    txt = set([txt.split(".")[0] for txt in glob.glob(f"*.gt.txt")])
+    images = set([img.split(".")[0] for img in glob.glob(f"*.{image_extension}")])
+    txt = set([txt.split(".")[0] for txt in glob.glob(f"*.{text_extentsion}")])
     for delname in tqdm(txt.difference(images)):
         fname = Path(delname)
         if verbose:
@@ -53,11 +57,13 @@ def delete_gitrepo_files_without_textfiles(gtpath, verbose):
 
 @click.command()
 @click.argument('gtpath', nargs=1, type=click.Path(exists=True))
+@click.option('--text-extension', default='gt.txt')
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Print more process information')
-def delete_gitrepo_files_with_empty_textfiles(gtpath, verbose):
+def delete_gitrepo_files_with_empty_textfiles(gtpath, text_extentsion, verbose):
+    """ If files """
     from git import Repo
     repo = Repo(gtpath, search_parent_directories=True)
-    txtfiles = set([txt.split(".")[0] for txt in glob.glob(f"*.gt.txt")])
+    txtfiles = set([txt.split(".")[0] for txt in glob.glob(f"*.{text_extentsion}")])
     for delname in tqdm(txtfiles):
         if os.stat("file").st_size != 0: continue
         fname = Path(delname)
