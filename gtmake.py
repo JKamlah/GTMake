@@ -37,7 +37,7 @@ from textwrap import wrap
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Print more process information')
 @click.pass_context
 def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
-                       autocontrast, normalize, level, padval, padprc,
+                       autocontrast, level, padval, padprc,
                        regex, min_len, max_len,
                        min_conf, max_conf,
                        num, mod_line,
