@@ -24,7 +24,7 @@ from textwrap import wrap
 @click.option('-l', '--lang', default="eng", help='Tesseract language model')
 @click.option('--level', default="line", help='Level of cut (line, word, char)', type=click.Choice(['line','word','char']))
 @click.option('--padval', default=0, help='Add more pixel to the cut by a fix value')
-@click.option('--padprc', default=0.0, help='Add more pixel to the cut by percantage')
+@click.option('--padprc', default=0.0, help='Add more pixel to the cut by percentage')
 @click.option('-r', '--regex', default=".*", help='Filter the lines to output by a regular expression')
 @click.option('--min-len', default=1, help='Filter the lines to output by min amount of characters')
 @click.option('--max-len', default=0, help='Filter the lines to output by max amount of characters')
@@ -46,7 +46,7 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
     Cuts areas (char, word, line) which contains user-specific expression
     :param file: inputfile
     :param fileout: output filename
-    :param tess_profile: profile containing user-specific informations and options
+    :param tess_profile: profile containing user-specific information and options
     :return:
     """
     fnames = get_fnames(fpaths, ext)
@@ -118,7 +118,7 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                               f"Settings\n" \
                               f"--------" \
                               f"image-extension -> {ext} \n" \
-                              f"autocontraxt -> {autocontrast} \n" \
+                              f"autocontrast -> {autocontrast} \n" \
                               f"psm -> {psm} \n" \
                               f"lang -> {lang} \n" \
                               f"level -> {level} \n" \
@@ -157,7 +157,7 @@ def get_pad(bbox,padval:int=0, padprc:float=0.0)->tuple:
     Calculates the padding values for cutting
     :param bbox: boundingbox information
     :param padval: padding value (pixel)
-    :param padprc: padding value (percantage)
+    :param padprc: padding value (percentage)
     :return:
     """
     pad = [0,0]
