@@ -3,6 +3,7 @@ from pathlib import Path
 import shutil
 import click
 
+
 @click.command()
 @click.argument('fpath', nargs=1, type=click.Path(exists=True))
 @click.option('-o', '--outputfolder', type=click.Path(), required=True, help='Outputfolder')
@@ -19,13 +20,14 @@ def get_random_selection(fpath, outputfolder, num, image_extenstion, text_extens
         outputfolder.mkdir()
     for fname in list_of_files[:num]:
         fname = Path(fname)
-        shutil.copy(fname,outputfolder.joinpath(fname.name))
-        shutil.copy(fname, outputfolder.joinpath(str(fname.name).rsplit(".",2)[0]+f".{text_extension}"))
-        shutil.copy(fname, outputfolder.joinpath(str(fname.name).rsplit(".",2)[0]+".json"))
+        shutil.copy(fname, outputfolder.joinpath(fname.name))
+        shutil.copy(fname, outputfolder.joinpath(str(fname.name).rsplit(".", 2)[0]+f".{text_extension}"))
+        shutil.copy(fname, outputfolder.joinpath(str(fname.name).rsplit(".", 2)[0]+".json"))
         count += 1
         if verbose:
             print(f"{count} file copied:")
-            print(f"{fname.name},{str(fname.name).rsplit('.',2)[0]+f'.{text_extension}'},{str(fname.name).rsplit('.',2)[0]+'.json'}")
+            print(f"{fname.name},{str(fname.name).rsplit('.',2)[0]+f'.{text_extension}'},"
+                  f"{str(fname.name).rsplit('.',2)[0]+'.json'}")
 
 
 
