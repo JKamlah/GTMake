@@ -1,18 +1,19 @@
 ###################### INFORMATION #############################
-#   Create gt line pairs 
-
+#   Create gt line pairs
 ########## IMPORT ##########
-from tesserocr import PyTessBaseAPI, RIL, iterate_level
-from PIL import Image, ImageOps, ImageMath
-from datetime import datetime
-import re
-import json
-from pathlib import Path
 import imghdr
-import click
-from tqdm import tqdm
+import json
+import re
 from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
 from textwrap import wrap
+
+import click
+from PIL import Image, ImageOps
+from tesserocr import PyTessBaseAPI, RIL, iterate_level
+from tqdm import tqdm
+
 
 ########## CUTTER FUNCTION ##########
 @click.command()
