@@ -1,4 +1,4 @@
-wheels
+wheel
 git-python
 tesserocr
 click
