@@ -24,8 +24,8 @@ from tqdm import tqdm
 @click.option('--autocontrast', default=False, is_flag=True, help='Apply autocontrast to lineimages (Output)')
 @click.option('--psm', default=3, help='Pagesegmentationmode (please see tesseract --help-extra)')
 @click.option('-l', '--lang', default="eng", help='Tesseract language model')
-@click.option('--level', default="line", help='Level of cut (line, word, char)',
-              type=click.Choice(['line', 'word', 'char']))
+@click.option('--level', default="line", help='Level of cut (line, word, glyph)',
+              type=click.Choice(['line', 'word', 'glyph']))
 @click.option('--padval', default=0, help='Add more pixel to the cut by a fix value')
 @click.option('--padprc', default=0.0, help='Add more pixel to the cut by percentage')
 @click.option('-r', '--regex', default=".*", help='Filter the lines to output by a regular expression')
@@ -71,7 +71,7 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                 ri = api.GetIterator()
                 # The char method is not quite correct,
                 # it seems that charbboxes get calculated after recognition, which leads sometimes to false cutouts.
-                level = {"char": RIL.SYMBOL, "word": RIL.WORD, "line": RIL.TEXTLINE}.get(level, RIL.TEXTLINE)
+                level = {"glyph": RIL.SYMBOL, "word": RIL.WORD, "line": RIL.TEXTLINE}.get(level, RIL.TEXTLINE)
                 img = Image.open(fname)
                 count = 0
                 for r in iterate_level(ri, level):
@@ -128,7 +128,7 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                 readme_text = f"This repository contains gt files which were automatically generated with GTMake " \
                               f"(https://github.com/UB-Mannheim/GTMake).\n\n" \
                               f"Settings\n" \
-                              f"--------" \
+                              f"--------\n" \
                               f"image-extension -> {ext} \n" \
                               f"autocontrast -> {autocontrast} \n" \
                               f"psm -> {psm} \n" \
@@ -144,7 +144,7 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                               f"mod-line -> {mod_line} \n" \
                               f"num -> {num} \n\n" \
                               f"Processed files\n" \
-                              f"---------------" \
+                              f"---------------\n" \
                               f"{fnames}"
                 ctx.invoke(create_gitrepo, repopath=gtdir, empty_textfiles=empty_textfiles, readme_text=readme_text,
                            verbose=verbose)

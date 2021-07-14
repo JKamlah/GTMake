@@ -28,9 +28,3 @@ def get_random_selection(fpath, outputfolder, num, image_extenstion, text_extens
             print(f"{count} file copied:")
             print(f"{fname.name},{str(fname.name).rsplit('.',2)[0]+f'.{text_extension}'},"
                   f"{str(fname.name).rsplit('.',2)[0]+'.json'}")
-
-
-
-
-
-
