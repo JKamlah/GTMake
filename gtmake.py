@@ -60,7 +60,7 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
         with PyTessBaseAPI(lang=lang, psm=psm) as api:
             for fname in tqdm(fnames):
                 gtdir = Path(outputfolder) if outputfolder and Path(
-                    outputfolder).parent.exists() else fname.parent.joinpath("gt/")
+                    outputfolder).parent.exists() else fname.parent.joinpath('gt/')
                 gtdirs[str(gtdir.resolve())].append(fname)
                 if num == line_count:
                     break
@@ -71,7 +71,7 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                 ri = api.GetIterator()
                 # The char method is not quite correct,
                 # it seems that charbboxes get calculated after recognition, which leads sometimes to false cutouts.
-                level = {"glyph": RIL.SYMBOL, "word": RIL.WORD, "line": RIL.TEXTLINE}.get(level, RIL.TEXTLINE)
+                level = {'glyph': RIL.SYMBOL, 'word': RIL.WORD, 'line': RIL.TEXTLINE}.get(level, RIL.TEXTLINE)
                 img = Image.open(fname)
                 count = 0
                 for r in iterate_level(ri, level):
@@ -97,22 +97,22 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                         elif padprc != 0.0:
                             bbox = (bbox[0] + padprc, bbox[1] + padprc, bbox[2] + padprc, bbox[3] + padprc)
                         cutarea = img.crop(bbox)
-                        new_fname = fname.name.split(".", 1)[0] + '_{:04d}'.format(count)
+                        new_fname = fname.name.split('.', 1)[0] + '_{:04d}'.format(count)
                         if autocontrast:
                             cutarea = ImageOps.autocontrast(cutarea)
                         cutarea.save(gtdir.joinpath(new_fname + f".{ext}"))
-                        origsymbol = "???" if origsymbol == "" else origsymbol
-                        with open(gtdir.joinpath(new_fname + ".json"), "w") as cutinfo:
+                        origsymbol = '???' if origsymbol == '' else origsymbol
+                        with open(gtdir.joinpath(new_fname + '.json'), 'w') as cutinfo:
                             # Information (Number of cut, Line/Word/Char Text, Confidence, BBOX)
-                            bboxinfo = {"BBOX": bbox, "Page": fname.name}
+                            bboxinfo = {'BBOX': bbox, 'Page': fname.name}
                             json.dump(bboxinfo, cutinfo, indent=4)
-                        with open(gtdir.joinpath(new_fname + ".gt.txt"), "w") as cutinfo:
+                        with open(gtdir.joinpath(new_fname + '.gt.txt'), 'w') as cutinfo:
                             # Information (Number of cut, Line/Word/Char Text, Confidence, BBOX)
                             cutinfo.write(origsymbol)
                         if verbose:
                             print(f"Write file: {new_fname}")
                             print(f"Content: {origsymbol}")
-                        with open(gtdir.joinpath("cutinfo.txt"), "a") as cutinfo:
+                        with open(gtdir.joinpath('cutinfo.txt'), 'a') as cutinfo:
                             # Information (Number of cut, Line/Word/Char Text, Confidence, BBOX)
                             cutinfo.write(
                                 f"[{datetime.now().strftime('%d-%b-%Y (%H:%M)')}]\t{count:06d}\t{origsymbol}"
@@ -183,9 +183,9 @@ def get_pad(bbox, padval: int = 0, padprc: float = 0.0) -> tuple:
             pad[0] = int((pad[0] + abs(bbox[3] - bbox[1])) * padprc)
             pad[1] = int((pad[1] + abs(bbox[2] - bbox[0])) * padprc)
     except AssertionError:
-        print("Padding values are incorrect.")
+        print('Padding values are incorrect.')
     return tuple(pad)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     make_gt_line_pairs()

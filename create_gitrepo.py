@@ -21,21 +21,18 @@ def create_gitrepo(repopath, text_extension, empty_textfiles, readme_text, verbo
     gtlines_path = gt.joinpath('gtlines')
     if not gtlines_path.exists():
         gtlines_path.mkdir(exist_ok=True, parents=True)
-    with open(gt.joinpath('README.md'), 'w') as fout:
-        fout.write(readme_text)
-    repo.index.add([str(gt.joinpath('README.md').resolve())])
-    repo.index.commit(f"ADD README")
+    add_readme(repo, gt.joinpath('README.md'), readme_text)
     for fname in gt.glob('*'):
         if fname.name.endswith('.md'):
             continue
         if 'cutinfo.txt' in fname.name:
             repo.index.add([str(fname.resolve())])
-            repo.index.commit(f"ADD cutinfo.txt")
+            repo.index.commit('ADD cutinfo.txt')
         elif fname.is_file():
             new_file = str(gtlines_path.joinpath(fname.name).resolve())
             if verbose:
                 print(fname.name.rsplit('_', 1)[0])
-            if empty_textfiles and f'.{text_extension}' in new_file:
+            if empty_textfiles and f".{text_extension}" in new_file:
                 Path(new_file).touch()
                 repo.index.add([new_file])
                 repo.index.commit(f"ADD {Path(new_file).name}")
@@ -43,8 +40,10 @@ def create_gitrepo(repopath, text_extension, empty_textfiles, readme_text, verbo
             if f'.{text_extension}' not in new_file:
                 repo.index.add([new_file])
                 repo.index.commit(f"ADD {Path(new_file).name}")
-    if not gt.joinpath('README.md').exists():
-        with open(gt.joinpath('README.md'), 'w') as fout:
-            fout.write(readme_text)
-        repo.index.add([str(gt.joinpath('README.md').resolve())])
-        repo.index.commit(f"ADD README")
+
+
+def add_readme(repo, readme_path, readme_text):
+    with open(readme_path, 'w') as fout:
+        fout.write(readme_text)
+    repo.index.add([str(readme_path.resolve())])
+    repo.index.commit('ADD README')

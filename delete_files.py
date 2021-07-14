@@ -10,6 +10,7 @@ from tqdm import tqdm
 @click.argument('list-of-files', nargs=1, type=click.Path(exists=True))
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Print more process information')
 def delete_files_with_list(list_of_files, verbose):
+    """ Deletes files provided by an list."""
     with open(list_of_files, "r") as fin:
         for fname in tqdm(fin.readlines()):
             if fname.strip() == "":
@@ -27,6 +28,7 @@ def delete_files_with_list(list_of_files, verbose):
 @click.option('--text-extension', default='gt.txt')
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Print more process information')
 def delete_files_without_textfiles(image_extension, text_extentsion, verbose):
+    """ Deletes image and json files if no equivalent textfile is in the path."""
     images = set([img.split(".")[0] for img in glob.glob(f"*.{image_extension}")])
     txt = set([txt.split(".")[0] for txt in glob.glob(f"*.{text_extentsion}")])
     for delname in tqdm(txt.difference(images)):
@@ -45,6 +47,7 @@ def delete_files_without_textfiles(image_extension, text_extentsion, verbose):
 @click.option('--text-extension', default='gt.txt')
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Print more process information')
 def delete_gitrepo_files_without_textfiles(gtpath, image_extension, text_extentsion, verbose):
+    """ Deletes image and json files if no equivalent textfile is in the repo."""
     from git import Repo
     repo = Repo(gtpath, search_parent_directories=True)
     images = set([img.split(".")[0] for img in glob.glob(f"*.{image_extension}")])
@@ -66,7 +69,7 @@ def delete_gitrepo_files_without_textfiles(gtpath, image_extension, text_extents
 @click.option('--text-extension', default='gt.txt')
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Print more process information')
 def delete_gitrepo_files_with_empty_textfiles(gtpath, text_extentsion, verbose):
-    """ If files """
+    """ Deletes image and json files if the equivalent textfile is empty."""
     from git import Repo
     repo = Repo(gtpath, search_parent_directories=True)
     txtfiles = set([txt.split(".")[0] for txt in glob.glob(f"*.{text_extentsion}")])

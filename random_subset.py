@@ -21,8 +21,8 @@ def get_random_selection(fpath, outputfolder, num, image_extenstion, text_extens
     for fname in list_of_files[:num]:
         fname = Path(fname)
         shutil.copy(fname, outputfolder.joinpath(fname.name))
-        shutil.copy(fname, outputfolder.joinpath(str(fname.name).rsplit(".", 2)[0]+f".{text_extension}"))
-        shutil.copy(fname, outputfolder.joinpath(str(fname.name).rsplit(".", 2)[0]+".json"))
+        shutil.copy(fname, outputfolder.joinpath(str(fname.name).rsplit('.', 2)[0]+f".{text_extension}"))
+        shutil.copy(fname, outputfolder.joinpath(str(fname.name).rsplit('.', 2)[0]+'.json'))
         count += 1
         if verbose:
             print(f"{count} file copied:")
