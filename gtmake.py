@@ -35,6 +35,7 @@ from tqdm import tqdm
 @click.option('--max-conf', default=100, help='Filter the lines to output by a max confidence level')
 @click.option('--mod-line', default=0, help='Filter the lines to output if the modulus of the linenumber is 0')
 @click.option('-n', '--num', default=0, help='Maximal ground truth lines to produce')
+@click.option('--num-per-page', default=0, help='Maximal ground truth lines to produce per page')
 @click.option('-g', '--gitrepo', default=False, is_flag=True,
               help='Create a git repository and add all images. Further processing can be done with GTCheck.')
 @click.option('-t', '--empty-textfiles', default=False, is_flag=True,
@@ -45,7 +46,7 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                        autocontrast, level, padval, padprc,
                        regex, min_len, max_len,
                        min_conf, max_conf,
-                       num, mod_line,
+                       num, num_per_page, mod_line,
                        gitrepo, empty_textfiles, verbose):
     """
     Cuts areas (char, word, line) which contains user-specific expression
@@ -59,6 +60,7 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
     try:
         with PyTessBaseAPI(lang=lang, psm=psm) as api:
             for fname in tqdm(fnames):
+                line_count_per_page = 1
                 gtdir = Path(outputfolder) if outputfolder and Path(
                     outputfolder).parent.exists() else fname.parent.joinpath('gt/')
                 gtdirs[str(gtdir.resolve())].append(fname)
@@ -119,6 +121,9 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                                 f"\t{conf:.3f}\t{bbox}\n")
                         if num == line_count:
                             break
+                        if num_per_page == line_count_per_page:
+                            break
+                        line_count_per_page += 1
                         line_count += 1
         if gitrepo:
             from create_gitrepo import create_gitrepo
