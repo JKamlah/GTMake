@@ -3,8 +3,10 @@
 ########## IMPORT ##########
 import imghdr
 import json
+import random
 import re
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from textwrap import wrap
@@ -36,6 +38,9 @@ from tqdm import tqdm
 @click.option('--mod-line', default=0, help='Filter the lines to output if the modulus of the linenumber is 0')
 @click.option('-n', '--num', default=0, help='Maximal ground truth lines to produce')
 @click.option('--num-per-page', default=0, help='Maximal ground truth lines to produce per page')
+@click.option('-s', '--shuffle', type=click.Choice(['files', 'cuts', 'both']),
+                 help='Shuffle the order of files, the selection from page or both. '
+                      'Increases memory consumption for cuts.')
 @click.option('-g', '--gitrepo', default=False, is_flag=True,
               help='Create a git repository and add all images. Further processing can be done with GTCheck.')
 @click.option('-t', '--empty-textfiles', default=False, is_flag=True,
@@ -46,13 +51,15 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                        autocontrast, level, padval, padprc,
                        regex, min_len, max_len,
                        min_conf, max_conf,
-                       num, num_per_page, mod_line,
+                       num, num_per_page, shuffle, mod_line,
                        gitrepo, empty_textfiles, verbose):
     """
     Cuts areas (char, word, line) which contains user-specific expression
     :return:
     """
     fnames = get_fnames(fpaths, ext)
+    if shuffle in ['files', 'both']:
+        random.shuffle(fnames)
     if verbose:
         print(f"Start processing {len(fnames)} files: {fnames}")
     line_count = 1
@@ -74,9 +81,18 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                 # The char method is not quite correct,
                 # it seems that charbboxes get calculated after recognition, which leads sometimes to false cutouts.
                 level = {'glyph': RIL.SYMBOL, 'word': RIL.WORD, 'line': RIL.TEXTLINE}.get(level, RIL.TEXTLINE)
+                if shuffle in ['cuts', 'both']:
+                    iterator = [IteratorItem(text=r.GetUTF8Text(level),
+                                             confidence=r.Confidence(level),
+                                             bbox=r.BoundingBoxInternal(level),
+                                             cut_idx=idx)
+                                for idx, r in enumerate(iterate_level(ri, level))]
+                    random.shuffle(iterator)
+                else:
+                    iterator = iterate_level(ri, level)
                 img = Image.open(fname)
                 count = 0
-                for r in iterate_level(ri, level):
+                for r in iterator:
                     symbol = r.GetUTF8Text(level).strip()  # r == ri
                     conf = r.Confidence(level)
                     if len(symbol) < min_len:
@@ -99,7 +115,7 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
                         elif padprc != 0.0:
                             bbox = (bbox[0] + padprc, bbox[1] + padprc, bbox[2] + padprc, bbox[3] + padprc)
                         cutarea = img.crop(bbox)
-                        new_fname = fname.name.split('.', 1)[0] + '_{:04d}'.format(count)
+                        new_fname = fname.name.split('.', 1)[0] + '_{:04d}'.format(r.cut_idx if hasattr(r, 'cut_idx') else count)
                         if autocontrast:
                             cutarea = ImageOps.autocontrast(cutarea)
                         cutarea.save(gtdir.joinpath(new_fname + f".{ext}"))
@@ -157,6 +173,22 @@ def make_gt_line_pairs(ctx, fpaths, outputfolder, psm, lang, ext,
         print("Some nasty things while cutting happens. Error:\n", e)
     return 0
 
+
+@dataclass(frozen=True)
+class IteratorItem:
+    text: str
+    confidence: int
+    bbox: tuple
+    cut_idx: int
+
+    def GetUTF8Text(self, *args):
+        return self.text
+
+    def Confidence(self, *args):
+        return self.confidence
+
+    def BoundingBoxInternal(self, *args):
+        return self.bbox
 
 def get_fnames(fpaths, ext):
     fnames = []
